@@ -232,6 +232,8 @@ function doQuit(){
 
 document.querySelectorAll(".menu button").forEach(btn=>{
   btn.onclick=()=>{
+    // Close the File menu before displaying another screen or dialog.
+    document.querySelector("details").open=false;
     const action=btn.dataset.action;
     if(action==="add")showEdit("add");
     if(action==="change")doChange();
