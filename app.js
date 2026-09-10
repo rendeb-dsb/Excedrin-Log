@@ -32,6 +32,57 @@ function showEdit(mode,i=-1){closeMenu();editMode=mode;editIndex=i;listScreen.cl
  else{dateInput.value=data.records[i].date;timeInput.value=data.records[i].time} setTimeout(()=>dateInput.focus(),50)}
 function maskDate(){let d=dateInput.value.replace(/\D/g,"").slice(0,8);dateInput.value=d.slice(0,2)+(d.length>2?"/"+d.slice(2,4):"")+(d.length>4?"/"+d.slice(4,8):"")}
 function maskTime(){let d=timeInput.value.replace(/\D/g,"").slice(0,4);timeInput.value=d.slice(0,2)+(d.length>2?":"+d.slice(2):"")}
+
+// Masked editing: slashes/colon are fixed, while digits can be replaced directly.
+// Backspace/Delete clear a digit instead of deleting a separator.
+function protectSeparator(input,separators){
+  input.addEventListener("keydown",e=>{
+    const start=input.selectionStart??0,end=input.selectionEnd??0;
+
+    if(/^\d$/.test(e.key)&&start===end){
+      let pos=start;
+      if(pos<input.value.length&&separators.includes(input.value[pos]))pos++;
+      if(pos<input.value.length){
+        e.preventDefault();
+        input.value=input.value.slice(0,pos)+e.key+input.value.slice(pos+1);
+        let next=pos+1;
+        while(next<input.value.length&&separators.includes(input.value[next]))next++;
+        input.setSelectionRange(next,next);
+      }
+      return;
+    }
+
+    if(e.key!=="Backspace"&&e.key!=="Delete")return;
+    let value=input.value;
+    if(start!==end){
+      e.preventDefault();
+      const chars=value.split("");
+      for(let i=start;i<end&&i<chars.length;i++)if(!separators.includes(chars[i]))chars[i]="_";
+      input.value=chars.join("");
+      input.setSelectionRange(start,start);
+      return;
+    }
+
+    let pos=-1;
+    if(e.key==="Backspace"){
+      pos=start-1;
+      if(pos>=0&&separators.includes(value[pos]))pos--;
+    }else{
+      pos=start;
+      if(pos<value.length&&separators.includes(value[pos]))pos++;
+    }
+    if(pos>=0&&pos<value.length&&!separators.includes(value[pos])){
+      e.preventDefault();
+      input.value=value.slice(0,pos)+"_"+value.slice(pos+1);
+      const caret=e.key==="Backspace"?pos:Math.min(pos+1,input.value.length);
+      input.setSelectionRange(caret,caret);
+    }else{
+      e.preventDefault();
+    }
+  });
+}
+protectSeparator(dateInput,["/"]);
+protectSeparator(timeInput,[":"]);
 dateInput.oninput=maskDate;timeInput.oninput=maskTime;
 $("saveBtn").onclick=()=>{maskDate();maskTime();if(!dateObj(dateInput.value)){validation.textContent="Please enter a valid date (mm/dd/yyyy).";return}if(!timeObj(timeInput.value)){validation.textContent="Please enter a valid time (hh:mm).";return}
  const r={date:dateInput.value,time:timeInput.value};if(editMode==="add"){data.records.push(r);const i=data.records.length-1;persist();closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}else{data.records[editIndex]=r;persist();list()}}
