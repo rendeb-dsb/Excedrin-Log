@@ -1,48 +1,33 @@
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f4f4;color:#111}
-.app{max-width:700px;margin:0 auto;min-height:100vh;background:#fff}
-header{padding:16px 18px 10px;border-bottom:1px solid #ddd}
-h1{font-size:26px;margin:0;font-weight:700}
-.menu-bar{background:#eee;border-bottom:1px solid #ccc}
-details{position:relative}
-summary{list-style:none;cursor:pointer;padding:10px 18px;font-weight:600}
-summary::-webkit-details-marker{display:none}
-.menu{position:absolute;z-index:10;left:0;top:100%;min-width:180px;background:white;border:1px solid #aaa;box-shadow:0 5px 14px #0002;padding:5px}
-.menu button{display:block;width:100%;text-align:left;border:0;background:white;padding:10px 12px;font:inherit;cursor:pointer}
-.menu button:hover,.menu button:focus{background:#eee}
-.separator{height:1px;background:#ddd;margin:4px 0}
-main{padding:14px 12px}
-.table-wrap{border:1px solid #ccc;overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th,td{border-bottom:1px solid #ddd;padding:9px 10px;text-align:left;font-size:16px}
-th{background:#eee;font-weight:700}
-tr:last-child td{border-bottom:0}
-.select-col{width:70px;text-align:center}
-td:first-child{text-align:center}
-input[type=radio]{width:20px;height:20px}
-.empty{padding:18px;text-align:center;color:#666}
-.date-group-0 td{background:#d9eaff}
-.date-group-1 td{background:#dff3df}
-.date-group-2 td{background:#fff0c7}
-.date-group-3 td{background:#eadcff}
-.date-group-4 td{background:#ffdede}
-.date-group-5 td{background:#d9f3f0}
-.screen{padding:16px}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#111}
+header{padding:18px 22px 14px;border-bottom:1px solid #ccc}
+h1{margin:0;font-size:30px}
+.filebar{position:relative;background:#eee;border-bottom:1px solid #bbb;height:52px}
+#fileButton{height:100%;padding:0 30px;border:0;background:#eee;font-size:20px;font-weight:700;cursor:pointer}
+.file-menu{position:absolute;z-index:1000;left:0;top:51px;width:220px;background:#fff;border:1px solid #aaa;box-shadow:0 4px 12px #0003}
+.file-menu button{display:block;width:100%;padding:13px 20px;border:0;background:#fff;text-align:left;font-size:18px;cursor:pointer}
+.file-menu button:active,.file-menu button:hover{background:#eee}
+.separator{height:1px;background:#ddd;margin:3px 0}
 .hidden{display:none!important}
-.form-card{max-width:430px;margin:0 auto;border:1px solid #ccc;padding:18px}
+main{padding:18px 22px}
+table{width:100%;border-collapse:collapse;border:1px solid #ccc}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;font-size:18px}
+th{background:#eee}
+td:first-child,th:first-child{text-align:center;width:90px}
+input[type=radio]{width:20px;height:20px}
+.empty{text-align:center;color:#666;font-size:18px;padding:20px;border:1px solid #ccc;border-top:0}
+#editScreen{padding:22px}
+.form-card{max-width:520px;border:1px solid #ccc;padding:22px;margin:auto}
 .form-card h2{margin:0 0 18px}
-label{display:block;font-weight:600;margin:12px 0 5px}
-.form-card input[type=text]{width:100%;font:20px ui-monospace,SFMono-Regular,monospace;padding:9px;border:1px solid #888;border-radius:4px}
-.buttons{display:flex;gap:10px;margin-top:20px}
-button{font:inherit}
-.buttons button{padding:9px 18px;border:1px solid #888;border-radius:4px;background:#eee}
-.buttons .primary{background:#ddd;font-weight:700}
-.validation{min-height:22px;margin-top:10px;color:#b00020}
-.dialog{position:fixed;inset:0;background:#0005;display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
-.dialog-card{background:white;border:1px solid #888;border-radius:6px;min-width:min(360px,100%);max-width:500px;padding:20px;box-shadow:0 10px 30px #0005}
-.dialog-message{font-size:18px;margin-bottom:18px}
+label{display:block;font-weight:bold;margin:14px 0 6px}
+input[type=text]{width:100%;padding:10px;border:1px solid #888;border-radius:5px;font:22px monospace}
+.buttons{display:flex;gap:12px;margin-top:20px}
+.buttons button{padding:10px 22px;font-size:18px}
+.validation{min-height:24px;color:#b00020;margin-top:10px}
+.dialog{position:fixed;inset:0;background:#0005;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px}
+.dialog-card{background:#fff;border:1px solid #888;border-radius:6px;min-width:300px;max-width:500px;padding:22px;box-shadow:0 8px 25px #0005}
+#dialogMessage{font-size:19px;margin-bottom:18px}
 .dialog-actions{display:flex;justify-content:flex-end;gap:10px}
-.dialog-actions button{padding:8px 18px;border:1px solid #888;background:#eee;border-radius:4px}
-.dialog-actions .primary{font-weight:700}
-.import-label{display:block;margin-bottom:8px;font-weight:600}
-@media(max-width:480px){th,td{font-size:15px;padding:8px}.menu{min-width:200px}}
+.dialog-actions button{padding:9px 20px;font-size:17px}
+@media(max-width:500px){header{padding-left:18px}main{padding:12px}th,td{font-size:16px}.form-card{padding:16px}}
+.date-group-0 td{background:#d9eaff}.date-group-1 td{background:#dff3df}.date-group-2 td{background:#fff0c7}.date-group-3 td{background:#eadcff}.date-group-4 td{background:#ffdede}.date-group-5 td{background:#d9f3f0}

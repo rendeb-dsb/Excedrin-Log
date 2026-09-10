@@ -3,67 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#fff">
 <link rel="manifest" href="manifest.json">
 <title>Excedrin</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app">
-  <header><h1>Excedrin</h1></header>
+<header><h1>Excedrin</h1></header>
 
-  <nav id="menuBar" class="menu-bar" aria-label="Main menu">
-    <details>
-      <summary>File</summary>
-      <div class="menu" role="menu">
-        <button data-action="add">Add...</button>
-        <button data-action="change">Change</button>
-        <button data-action="delete">Delete</button>
-        <div class="separator"></div>
-        <button data-action="import">Import</button>
-        <button data-action="export">Export</button>
-        <div class="separator"></div>
-        <button data-action="quit">Quit</button>
-      </div>
-    </details>
-  </nav>
+<nav class="filebar">
+  <button id="fileButton" aria-expanded="false">File</button>
+  <div id="fileMenu" class="file-menu hidden" role="menu">
+    <button data-action="add">Add...</button>
+    <button data-action="change">Change</button>
+    <button data-action="delete">Delete</button>
+    <div class="separator"></div>
+    <button data-action="import">Import</button>
+    <button data-action="export">Export</button>
+    <div class="separator"></div>
+    <button data-action="quit">Quit</button>
+  </div>
+</nav>
 
-  <main id="listScreen">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th class="select-col">Group</th><th>Date</th><th>Time</th></tr></thead>
-        <tbody id="recordBody"></tbody>
-      </table>
-      <div id="emptyMessage" class="empty">No records.</div>
+<main id="listScreen">
+  <table>
+    <thead><tr><th>Group</th><th>Date</th><th>Time</th></tr></thead>
+    <tbody id="recordBody"></tbody>
+  </table>
+  <div id="emptyMessage" class="empty">No records.</div>
+</main>
+
+<section id="editScreen" class="hidden">
+  <div class="form-card">
+    <h2 id="editTitle">Add</h2>
+    <label for="dateInput">Date</label>
+    <input id="dateInput" type="text" inputmode="numeric" maxlength="10" placeholder="__/__/____" autocomplete="off">
+    <label for="timeInput">Time</label>
+    <input id="timeInput" type="text" inputmode="numeric" maxlength="5" placeholder="__:__" autocomplete="off">
+    <div class="buttons">
+      <button id="saveBtn">Save</button>
+      <button id="cancelBtn">Cancel</button>
     </div>
-  </main>
+    <div id="validation" class="validation"></div>
+  </div>
+</section>
 
-  <section id="editScreen" class="screen hidden" aria-hidden="true">
-    <div class="form-card">
-      <h2 id="editTitle">Add</h2>
-      <label for="dateInput">Date</label>
-      <input id="dateInput" type="text" inputmode="numeric" autocomplete="off"
-             maxlength="10" placeholder="__/__/____" aria-label="Date">
-      <label for="timeInput">Time</label>
-      <input id="timeInput" type="text" inputmode="numeric" autocomplete="off"
-             maxlength="5" placeholder="__:__" aria-label="Time">
-      <div class="buttons">
-        <button id="saveBtn" class="primary">Save</button>
-        <button id="cancelBtn">Cancel</button>
-      </div>
-      <div id="validation" class="validation" role="alert"></div>
-    </div>
-  </section>
-</div>
-
-<div id="dialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="dialogMessage">
+<div id="dialog" class="dialog hidden">
   <div class="dialog-card">
-    <div id="dialogMessage" class="dialog-message"></div>
+    <div id="dialogMessage"></div>
     <div id="dialogContent"></div>
   </div>
 </div>
-
 <input id="fileInput" type="file" accept=".csv,text/csv" class="hidden">
+
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,11 +1,1 @@
-{
-  "name": "Excedrin",
-  "short_name": "Excedrin",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "icons": [
-    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
-  ]
-}
+{"name":"Excedrin","short_name":"Excedrin","start_url":"./","display":"standalone","background_color":"#fff","theme_color":"#fff","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}

@@ -1,262 +1,53 @@
-const STORAGE_KEY = "excedrinData";
-const CURRENT_VERSION = 1;
+const KEY="excedrinData",VERSION=1;
+let data=load(),editMode=null,editIndex=-1;
+const $=id=>document.getElementById(id);
+const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
+const dateInput=$("dateInput"),timeInput=$("timeInput"),validation=$("validation");
 
-let data = loadData();
-let editMode = null;
-let editIndex = -1;
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"");return x&&Array.isArray(x.records)?{version:VERSION,records:x.records}: {version:VERSION,records:[]}}catch(e){return {version:VERSION,records:[]}}}
+function persist(){localStorage.setItem(KEY,JSON.stringify({version:VERSION,records:data.records}))}
+function closeMenu(){fileMenu.classList.add("hidden");fileButton.setAttribute("aria-expanded","false")}
+fileButton.onclick=e=>{e.stopPropagation();const closed=fileMenu.classList.contains("hidden");if(closed){fileMenu.classList.remove("hidden");fileButton.setAttribute("aria-expanded","true")}else closeMenu()};
+document.addEventListener("click",e=>{if(!fileMenu.contains(e.target)&&e.target!==fileButton)closeMenu()});
 
-const $ = id => document.getElementById(id);
-const listScreen = $("listScreen");
-const editScreen = $("editScreen");
-const body = $("recordBody");
-const emptyMessage = $("emptyMessage");
-const dateInput = $("dateInput");
-const timeInput = $("timeInput");
-const validation = $("validation");
-const menuBar = $("menuBar");
+function dateObj(s){const m=/^(\d\d)\/(\d\d)\/(\d{4})$/.exec(s);if(!m)return null;const mo=+m[1],d=+m[2],y=+m[3],x=new Date(y,mo-1,d);return x.getFullYear()===y&&x.getMonth()===mo-1&&x.getDate()===d?{y,mo,d}:null}
+function timeObj(s){const m=/^(\d\d):(\d\d)$/.exec(s);if(!m)return null;const h=+m[1],n=+m[2];return h<24&&n<60?{h,n}:null}
+function stamp(r){const d=dateObj(r.date),t=timeObj(r.time);return d?[d.y,d.mo,d.d,t?t.h:0,t?t.n:0]:[-1,-1,-1,-1,-1]}
+function recordsSorted(){return data.records.map((r,i)=>({r,i})).sort((a,b)=>{const A=stamp(a.r),B=stamp(b.r);for(let j=0;j<5;j++)if(A[j]!==B[j])return B[j]-A[j];return b.i-a.i})}
 
-function loadData(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return {version: CURRENT_VERSION, records: []};
-    const parsed = JSON.parse(raw);
-    if(!parsed || !Array.isArray(parsed.records)) return {version: CURRENT_VERSION, records: []};
-    return {version: Number(parsed.version)||CURRENT_VERSION, records: parsed.records.map(r=>({
-      date: String(r.date||""),
-      time: String(r.time||"")
-    }))};
-  }catch(e){ return {version: CURRENT_VERSION, records: []}; }
+function render(selected=-1){
+ const rows=recordsSorted(), body=$("recordBody");body.innerHTML="";
+ const counts=new Map();rows.forEach(x=>counts.set(x.r.date,(counts.get(x.r.date)||0)+1));
+ const colors=new Map();let c=0;rows.forEach(x=>{if(counts.get(x.r.date)>=2&&!colors.has(x.r.date))colors.set(x.r.date,c++%6)});
+ $("emptyMessage").classList.toggle("hidden",rows.length>0);
+ rows.forEach(x=>{const tr=document.createElement("tr");if(colors.has(x.r.date))tr.className="date-group-"+colors.get(x.r.date);
+ const a=document.createElement("td"),r=document.createElement("input");r.type="radio";r.name="selected";r.value=x.i;r.checked=x.i===selected;a.append(r);
+ const d=document.createElement("td");d.textContent=x.r.date;const t=document.createElement("td");t.textContent=x.r.time;tr.append(a,d,t);body.append(tr)})
 }
+function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
+function list(){closeMenu();editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render()}
+function showEdit(mode,i=-1){closeMenu();editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
+ $("editTitle").textContent=mode==="add"?"Add":"Change";
+ if(mode==="add"){const n=new Date();dateInput.value=String(n.getMonth()+1).padStart(2,"0")+"/"+String(n.getDate()).padStart(2,"0")+"/"+n.getFullYear();timeInput.value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")}
+ else{dateInput.value=data.records[i].date;timeInput.value=data.records[i].time} setTimeout(()=>dateInput.focus(),50)}
+function maskDate(){let d=dateInput.value.replace(/\D/g,"").slice(0,8);dateInput.value=d.slice(0,2)+(d.length>2?"/"+d.slice(2,4):"")+(d.length>4?"/"+d.slice(4,8):"")}
+function maskTime(){let d=timeInput.value.replace(/\D/g,"").slice(0,4);timeInput.value=d.slice(0,2)+(d.length>2?":"+d.slice(2):"")}
+dateInput.oninput=maskDate;timeInput.oninput=maskTime;
+$("saveBtn").onclick=()=>{maskDate();maskTime();if(!dateObj(dateInput.value)){validation.textContent="Please enter a valid date (mm/dd/yyyy).";return}if(!timeObj(timeInput.value)){validation.textContent="Please enter a valid time (hh:mm).";return}
+ const r={date:dateInput.value,time:timeInput.value};if(editMode==="add"){data.records.push(r);const i=data.records.length-1;persist();closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}else{data.records[editIndex]=r;persist();list()}}
+$("cancelBtn").onclick=list;
 
-function saveData(){ 
-  data.version = CURRENT_VERSION;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+function dialog(message,buttons,html=""){closeMenu();$("dialogMessage").textContent=message;$("dialogContent").innerHTML=html;const a=document.createElement("div");a.className="dialog-actions";buttons.forEach(x=>{const b=document.createElement("button");b.textContent=x.label;b.onclick=()=>{hideDialog();x.fn&&x.fn()};a.append(b)});$("dialogContent").append(a);$("dialog").classList.remove("hidden")}
+function hideDialog(){$("dialog").classList.add("hidden");$("dialogContent").innerHTML=""}
 
-function parseDate(s){
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);
-  if(!m) return null;
-  const mo=+m[1], d=+m[2], y=+m[3];
-  const dt=new Date(y,mo-1,d);
-  return dt.getFullYear()===y && dt.getMonth()===mo-1 && dt.getDate()===d ? {y,mo,d} : null;
-}
-function parseTime(s){
-  const m=/^(\d{2}):(\d{2})$/.exec(s);
-  if(!m) return null;
-  const h=+m[1], min=+m[2];
-  return h>=0&&h<=23&&min>=0&&min<=59 ? {h,min} : null;
-}
-function key(r){
-  const d=parseDate(r.date), t=parseTime(r.time);
-  return d ? [d.y,d.mo,d.d,t?t.h:0,t?t.min:0] : [-1,-1,-1,-1,-1];
-}
-function sortedRecords(){
-  return data.records.map((r,i)=>({r,i})).sort((a,b)=>{
-    const A=key(a.r),B=key(b.r);
-    for(let n=0;n<A.length;n++) if(A[n]!==B[n]) return B[n]-A[n];
-    return b.i-a.i;
-  });
-}
-function renderList(selectedOriginalIndex=-1){
-  body.innerHTML="";
-  const sorted=sortedRecords();
-  emptyMessage.classList.toggle("hidden", sorted.length!==0);
-
-  const dateCounts = new Map();
-  sorted.forEach(({r}) => dateCounts.set(r.date, (dateCounts.get(r.date) || 0) + 1));
-  const duplicateDates = new Set(
-    [...dateCounts.entries()].filter(([, count]) => count >= 2).map(([date]) => date)
-  );
-  const dateColors = new Map();
-  let colorNumber = 0;
-  sorted.forEach(({r}) => {
-    if (duplicateDates.has(r.date) && !dateColors.has(r.date)) {
-      dateColors.set(r.date, colorNumber % 6);
-      colorNumber++;
-    }
-  });
-
-  sorted.forEach(({r,i})=>{
-    const tr=document.createElement("tr");
-    if (dateColors.has(r.date)) tr.classList.add("date-group-" + dateColors.get(r.date));
-    const td0=document.createElement("td"); td0.className="select-col";
-    const radio=document.createElement("input");
-    radio.type="radio"; radio.name="selectedRecord"; radio.value=i;
-    radio.checked=i===selectedOriginalIndex;
-    td0.appendChild(radio);
-    const td1=document.createElement("td"); td1.textContent=r.date;
-    const td2=document.createElement("td"); td2.textContent=r.time;
-    tr.append(td0,td1,td2); body.appendChild(tr);
-  });
-}
-function selectedIndex(){
-  const x=document.querySelector('input[name="selectedRecord"]:checked');
-  return x ? Number(x.value) : -1;
-}
-function closeFileMenu(){
-  const details=document.querySelector("details");
-  if(details) details.open=false;
-}
-function showList(selected=-1){
-  closeFileMenu();
-  editScreen.classList.add("hidden"); editScreen.setAttribute("aria-hidden","true");
-  listScreen.classList.remove("hidden");
-  menuBar.classList.remove("hidden");
-  renderList(selected);
-}
-function showEdit(mode,index=-1){
-  closeFileMenu();
-  menuBar.classList.add("hidden");
-  editMode=mode; editIndex=index;
-  listScreen.classList.add("hidden");
-  editScreen.classList.remove("hidden"); editScreen.setAttribute("aria-hidden","false");
-  $("editTitle").textContent=mode==="add"?"Add":"Change";
-  validation.textContent="";
-  if(mode==="add"){
-    const now=new Date();
-    dateInput.value=fmtDate(now);
-    timeInput.value=fmtTime(now);
-  }else{
-    dateInput.value=data.records[index].date;
-    timeInput.value=data.records[index].time;
-  }
-  setTimeout(()=>dateInput.focus(),0);
-}
-function fmtDate(d){return String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+"/"+d.getFullYear()}
-function fmtTime(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
-
-function maskDate(el){
-  const old=el.value, pos=el.selectionStart||0;
-  let digits=old.replace(/\D/g,"").slice(0,8);
-  let out="";
-  if(digits.length>0) out=digits.slice(0,2);
-  if(digits.length>2) out+="/"+digits.slice(2,4);
-  if(digits.length>4) out+="/"+digits.slice(4,8);
-  el.value=out;
-  const target=Math.min(out.length, pos + ((pos===2||pos===5)?1:0));
-  try{el.setSelectionRange(target,target)}catch(_){}
-}
-function maskTime(el){
-  const old=el.value, pos=el.selectionStart||0;
-  let digits=old.replace(/\D/g,"").slice(0,4);
-  let out=digits.slice(0,2)+(digits.length>2?":"+digits.slice(2):"");
-  el.value=out;
-  const target=Math.min(out.length,pos+(pos===2?1:0));
-  try{el.setSelectionRange(target,target)}catch(_){}
-}
-dateInput.addEventListener("input",()=>maskDate(dateInput));
-timeInput.addEventListener("input",()=>maskTime(timeInput));
-dateInput.addEventListener("keydown",e=>{if(e.key==="Enter")$("saveBtn").click()});
-timeInput.addEventListener("keydown",e=>{if(e.key==="Enter")$("saveBtn").click()});
-
-$("saveBtn").onclick=()=>{
-  maskDate(dateInput); maskTime(timeInput);
-  const d=parseDate(dateInput.value), t=parseTime(timeInput.value);
-  if(!d){validation.textContent="Please enter a valid date (mm/dd/yyyy).";return}
-  if(!t){validation.textContent="Please enter a valid time (hh:mm).";return}
-  const record={date:dateInput.value,time:timeInput.value};
-  if(editMode==="add"){
-    data.records.push(record); saveData();
-    const newIndex=data.records.length-1; showList(newIndex);
-  }else{
-    data.records[editIndex]=record; saveData(); showList(editIndex);
-  }
-};
-$("cancelBtn").onclick=()=>showList();
-
-function appDialog(message, actions, content=""){
-  closeFileMenu();
-  menuBar.classList.add("hidden");
-  $("dialogMessage").textContent=message;
-  $("dialogContent").innerHTML=content;
-  const wrap=document.createElement("div"); wrap.className="dialog-actions";
-  actions.forEach(a=>{
-    const b=document.createElement("button"); b.textContent=a.label;
-    if(a.primary)b.className="primary";
-    b.onclick=()=>{hideDialog(); a.onClick&&a.onClick()};
-    wrap.appendChild(b);
-  });
-  $("dialogContent").appendChild(wrap);
-  $("dialog").classList.remove("hidden");
-}
-function hideDialog(){
-  $("dialog").classList.add("hidden");
-  $("dialogContent").innerHTML="";
-  menuBar.classList.remove("hidden");
-}
-
-function doChange(){
-  const i=selectedIndex();
-  if(i<0){appDialog("Please select a record.",[{label:"OK",primary:true}]);return}
-  showEdit("change",i);
-}
-function doDelete(){
-  const i=selectedIndex();
-  if(i<0){appDialog("Please select a record.",[{label:"OK",primary:true}]);return}
-  appDialog("Are you sure?",[
-    {label:"Yes",primary:true,onClick:()=>{data.records.splice(i,1);saveData();showList()}},
-    {label:"Cancel"}
-  ]);
-}
-function doImport(){
-  appDialog("",[
-    {label:"Import",primary:true,onClick:()=>fileInput.click()},
-    {label:"Cancel"}
-  ],'<label class="import-label" for="fileInput">CSV file</label>');
-}
+function doChange(){const i=selected();if(i<0)return dialog("Please select a record.",[{label:"OK"}]);showEdit("change",i)}
+function doDelete(){const i=selected();if(i<0)return dialog("Please select a record.",[{label:"OK"}]);dialog("Are you sure?",[{label:"Yes",fn:()=>{data.records.splice(i,1);persist();render()}},{label:"Cancel"}])}
 const fileInput=$("fileInput");
-fileInput.onchange=async()=>{
-  const file=fileInput.files[0]; fileInput.value="";
-  if(!file)return;
-  try{
-    const text=await file.text();
-    const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(x=>x.trim()!=="");
-    if(!lines.length) throw new Error("The CSV file is empty.");
-    let start=0;
-    const first=lines[0].trim().toLowerCase();
-    if(first==="date,time") start=1;
-    const records=[];
-    for(let n=start;n<lines.length;n++){
-      const parts=splitCSVLine(lines[n]);
-      if(parts.length!==2) throw new Error("Invalid CSV format.");
-      const date=parts[0].trim(),time=parts[1].trim();
-      if(!parseDate(date)||!parseTime(time)) throw new Error("Invalid Date or Time in CSV.");
-      records.push({date,time});
-    }
-    data={version:CURRENT_VERSION,records}; saveData(); renderList();
-  }catch(e){
-    appDialog(e.message||"Import failed.",[{label:"OK",primary:true}]);
-  }
-};
-function splitCSVLine(line){
-  // Handles the simple two-column CSV required by this app, including quoted values.
-  const m=line.match(/^\s*(?:"([^"]*)"|([^,]*))\s*,\s*(?:"([^"]*)"|([^,]*))\s*$/);
-  return m ? [m[1]??m[2]??"",m[3]??m[4]??""] : [];
-}
-function csvEscape(s){return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
-function doExport(){
-  const lines=["Date,Time"];
-  data.records.forEach(r=>lines.push(csvEscape(r.date)+","+csvEscape(r.time)));
-  const blob=new Blob([lines.join("\r\n")+"\r\n"],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="Excedrin.csv";
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
-function doQuit(){
-  appDialog("The supporting page can be manually closed.",[{label:"OK",primary:true}]);
-}
+function doImport(){dialog("",[{label:"Import",fn:()=>fileInput.click()},{label:"Cancel"}],'<label>Select CSV file</label>')}
+fileInput.onchange=async()=>{const f=fileInput.files[0];fileInput.value="";if(!f)return;try{let lines=(await f.text()).replace(/^\uFEFF/,"").split(/\r?\n/).filter(x=>x.trim());if(lines[0].trim().toLowerCase()==="date,time")lines.shift();const rec=lines.map(line=>{const p=line.split(",");if(p.length!==2||!dateObj(p[0].trim())||!timeObj(p[1].trim()))throw Error("Invalid CSV data.");return{date:p[0].trim(),time:p[1].trim()}});data.records=rec;persist();render()}catch(e){dialog(e.message||"Import failed.",[{label:"OK"}])}}
+function doExport(){const text="Date,Time\r\n"+data.records.map(r=>r.date+","+r.time).join("\r\n")+"\r\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"}));a.download="Excedrin.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function doQuit(){dialog("The supporting page can be manually closed.",[{label:"OK"}])}
 
-document.querySelectorAll(".menu button").forEach(btn=>{
-  btn.onclick=()=>{
-    closeFileMenu();
-    menuBar.classList.add("hidden");
-    const action=btn.dataset.action;
-    if(action==="add")showEdit("add");
-    if(action==="change")doChange();
-    if(action==="delete")doDelete();
-    if(action==="import")doImport();
-    if(action==="export")doExport();
-    if(action==="quit")doQuit();
-  };
-});
-renderList();
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
+render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
