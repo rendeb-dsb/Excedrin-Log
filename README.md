@@ -13,3 +13,7 @@ followed by one record per line.
 
 ## Running
 Serve this folder from HTTPS (or localhost for testing). For GitHub Pages, upload all files to a repository and enable Pages. Open the resulting Pages URL on the phone and use the browser's install/add-to-home-screen command.
+
+
+## Version 4
+The File menu is forcibly hidden whenever an Add/Change screen or dialog is displayed, preventing it from covering the screen on mobile browsers.

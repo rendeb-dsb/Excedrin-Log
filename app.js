@@ -13,6 +13,7 @@ const emptyMessage = $("emptyMessage");
 const dateInput = $("dateInput");
 const timeInput = $("timeInput");
 const validation = $("validation");
+const menuBar = $("menuBar");
 
 function loadData(){
   try{
@@ -92,12 +93,20 @@ function selectedIndex(){
   const x=document.querySelector('input[name="selectedRecord"]:checked');
   return x ? Number(x.value) : -1;
 }
+function closeFileMenu(){
+  const details=document.querySelector("details");
+  if(details) details.open=false;
+}
 function showList(selected=-1){
+  closeFileMenu();
   editScreen.classList.add("hidden"); editScreen.setAttribute("aria-hidden","true");
-  listScreen.classList.remove("hidden"); renderList(selected);
-  document.querySelector("details").open=false;
+  listScreen.classList.remove("hidden");
+  menuBar.classList.remove("hidden");
+  renderList(selected);
 }
 function showEdit(mode,index=-1){
+  closeFileMenu();
+  menuBar.classList.add("hidden");
   editMode=mode; editIndex=index;
   listScreen.classList.add("hidden");
   editScreen.classList.remove("hidden"); editScreen.setAttribute("aria-hidden","false");
@@ -156,6 +165,8 @@ $("saveBtn").onclick=()=>{
 $("cancelBtn").onclick=()=>showList();
 
 function appDialog(message, actions, content=""){
+  closeFileMenu();
+  menuBar.classList.add("hidden");
   $("dialogMessage").textContent=message;
   $("dialogContent").innerHTML=content;
   const wrap=document.createElement("div"); wrap.className="dialog-actions";
@@ -168,7 +179,11 @@ function appDialog(message, actions, content=""){
   $("dialogContent").appendChild(wrap);
   $("dialog").classList.remove("hidden");
 }
-function hideDialog(){$("dialog").classList.add("hidden");$("dialogContent").innerHTML=""}
+function hideDialog(){
+  $("dialog").classList.add("hidden");
+  $("dialogContent").innerHTML="";
+  menuBar.classList.remove("hidden");
+}
 
 function doChange(){
   const i=selectedIndex();
@@ -232,8 +247,8 @@ function doQuit(){
 
 document.querySelectorAll(".menu button").forEach(btn=>{
   btn.onclick=()=>{
-    // Close the File menu before displaying another screen or dialog.
-    document.querySelector("details").open=false;
+    closeFileMenu();
+    menuBar.classList.add("hidden");
     const action=btn.dataset.action;
     if(action==="add")showEdit("add");
     if(action==="change")doChange();
