@@ -15,6 +15,24 @@ function timeObj(s){const m=/^(\d\d):(\d\d)$/.exec(s);if(!m)return null;const h=
 function stamp(r){const d=dateObj(r.date),t=timeObj(r.time);return d?[d.y,d.mo,d.d,t?t.h:0,t?t.n:0]:[-1,-1,-1,-1,-1]}
 function recordsSorted(){return data.records.map((r,i)=>({r,i})).sort((a,b)=>{const A=stamp(a.r),B=stamp(b.r);for(let j=0;j<5;j++)if(A[j]!==B[j])return B[j]-A[j];return b.i-a.i})}
 
+function updateTimeSince(){
+ const el=$("timeSince");
+ if(!data.records.length){el.textContent="Time since last use: --:--";return}
+ const rows=recordsSorted();
+ const latest=rows[0]?.r;
+ if(!latest){el.textContent="Time since last use: --:--";return}
+ const d=dateObj(latest.date),t=timeObj(latest.time);
+ if(!d||!t){el.textContent="Time since last use: --:--";return}
+ const last=new Date(d.y,d.mo-1,d.d,t.h,t.n,0,0);
+ const now=new Date();
+ let diff=now-last;
+ if(diff<0)diff=0;
+ const totalMinutes=Math.floor(diff/60000);
+ const hours=Math.floor(totalMinutes/60);
+ const minutes=totalMinutes%60;
+ el.textContent=`Time since last use: ${hours}:${String(minutes).padStart(2,"0")}`;
+}
+
 function render(selected=-1){
  const rows=recordsSorted(), body=$("recordBody");body.innerHTML="";
  const counts=new Map();rows.forEach(x=>counts.set(x.r.date,(counts.get(x.r.date)||0)+1));
@@ -23,6 +41,7 @@ function render(selected=-1){
  rows.forEach(x=>{const tr=document.createElement("tr");if(colors.has(x.r.date))tr.className="date-group-"+colors.get(x.r.date);
  const a=document.createElement("td"),r=document.createElement("input");r.type="radio";r.name="selected";r.value=x.i;r.checked=x.i===selected;a.append(r);
  const d=document.createElement("td");d.textContent=x.r.date;const t=document.createElement("td");t.textContent=x.r.time;tr.append(a,d,t);body.append(tr)})
+ updateTimeSince();
 }
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
 function list(){closeMenu();editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render()}
