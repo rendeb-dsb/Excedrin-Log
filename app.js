@@ -17,20 +17,21 @@ function recordsSorted(){return data.records.map((r,i)=>({r,i})).sort((a,b)=>{co
 
 function updateTimeSince(){
  const el=$("timeSince");
- if(!data.records.length){el.textContent="Time since last use: --:--";return}
+ if(!data.records.length){el.textContent="Time since last use: 00:00:00";return}
  const rows=recordsSorted();
  const latest=rows[0]?.r;
- if(!latest){el.textContent="Time since last use: --:--";return}
+ if(!latest){el.textContent="Time since last use: 00:00:00";return}
  const d=dateObj(latest.date),t=timeObj(latest.time);
- if(!d||!t){el.textContent="Time since last use: --:--";return}
+ if(!d||!t){el.textContent="Time since last use: 00:00:00";return}
  const last=new Date(d.y,d.mo-1,d.d,t.h,t.n,0,0);
  const now=new Date();
  let diff=now-last;
  if(diff<0)diff=0;
  const totalMinutes=Math.floor(diff/60000);
- const hours=Math.floor(totalMinutes/60);
+ const days=Math.floor(totalMinutes/1440);
+ const hours=Math.floor((totalMinutes%1440)/60);
  const minutes=totalMinutes%60;
- el.textContent=`Time since last use: ${hours}:${String(minutes).padStart(2,"0")}`;
+ el.textContent=`Time since last use: ${String(days).padStart(2,"0")}:${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}`;
 }
 
 function render(selected=-1){
