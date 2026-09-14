@@ -1,1 +1,1 @@
-Excedrin PWA. Internal storage is versioned JSON in localStorage; import/export uses CSV.
+Excedrin PWA v11. Internal storage is versioned JSON in localStorage; import/export uses CSV. The List screen includes a Day column showing the first two characters of the weekday based on each record date.

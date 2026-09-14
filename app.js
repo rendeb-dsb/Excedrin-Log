@@ -41,7 +41,13 @@ function render(selected=-1){
  $("emptyMessage").classList.toggle("hidden",rows.length>0);
  rows.forEach(x=>{const tr=document.createElement("tr");if(colors.has(x.r.date))tr.className="date-group-"+colors.get(x.r.date);
  const a=document.createElement("td"),r=document.createElement("input");r.type="radio";r.name="selected";r.value=x.i;r.checked=x.i===selected;a.append(r);
- const d=document.createElement("td");d.textContent=x.r.date;const t=document.createElement("td");t.textContent=x.r.time;tr.append(a,d,t);body.append(tr)})
+ const day=document.createElement("td");
+ const parsed=dateObj(x.r.date);
+ const dayNames=["Su","Mo","Tu","We","Th","Fr","Sa"];
+ day.textContent=parsed?dayNames[new Date(parsed.y,parsed.mo-1,parsed.d).getDay()]:"";
+ const d=document.createElement("td");d.textContent=x.r.date;
+ const t=document.createElement("td");t.textContent=x.r.time;
+ tr.append(a,day,d,t);body.append(tr)})
  updateTimeSince();
 }
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
