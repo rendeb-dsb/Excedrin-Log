@@ -1,11 +1,17 @@
-const KEY="excedrinData",VERSION=1;
-let data=load(),editMode=null,editIndex=-1;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=14;
+let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
 const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
 const dateInput=$("dateInput"),timeInput=$("timeInput"),validation=$("validation");
 
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"");return x&&Array.isArray(x.records)?{version:VERSION,records:x.records}: {version:VERSION,records:[]}}catch(e){return {version:VERSION,records:[]}}}
-function persist(){localStorage.setItem(KEY,JSON.stringify({version:VERSION,records:data.records}))}
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:"id",autoIncrement:true})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Unable to open the Excedrin database."))})}
+function dbGetAll(db){return new Promise((resolve,reject)=>{const req=db.transaction(STORE_NAME,"readonly").objectStore(STORE_NAME).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error("Unable to read the Excedrin database."))})}
+function dbReplaceAll(db,records){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE_NAME,"readwrite"),store=tx.objectStore(STORE_NAME);store.clear();records.forEach(r=>store.add({date:r.date,time:r.time}));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Unable to save Excedrin data."));tx.onabort=()=>reject(tx.error||new Error("Unable to save Excedrin data."))})}
+async function migrateLegacy(db,records){if(records.length)return;try{const raw=localStorage.getItem(KEY);if(!raw)return;const old=JSON.parse(raw);if(old&&Array.isArray(old.records)&&old.records.length){await dbReplaceAll(db,old.records);}}catch(e){throw new Error("The existing Excedrin data could not be safely migrated. No data was discarded.")}}
+async function initializeStorage(){if(!window.indexedDB)throw new Error("Persistent storage is unavailable. Excedrin will not start without persistent storage.");const db=await openDB();let records=await dbGetAll(db);await migrateLegacy(db,records);records=await dbGetAll(db);data={version:VERSION,records:records.map(r=>({date:r.date,time:r.time}))};return db}
+let dbPromise=initializeStorage();
+async function persist(){const db=await dbPromise;await dbReplaceAll(db,data.records);try{localStorage.setItem(KEY,JSON.stringify({version:VERSION,records:data.records}))}catch(e){/* IndexedDB is the authoritative store. */}}
+
 function closeMenu(){fileMenu.classList.add("hidden");fileButton.setAttribute("aria-expanded","false")}
 fileButton.onclick=e=>{e.stopPropagation();const closed=fileMenu.classList.contains("hidden");if(closed){fileMenu.classList.remove("hidden");fileButton.setAttribute("aria-expanded","true")}else closeMenu()};
 document.addEventListener("click",e=>{if(!fileMenu.contains(e.target)&&e.target!==fileButton)closeMenu()});
@@ -111,20 +117,43 @@ protectSeparator(dateInput,["/"]);
 protectSeparator(timeInput,[":"]);
 dateInput.oninput=maskDate;timeInput.oninput=maskTime;
 $("saveBtn").onclick=()=>{maskDate();maskTime();if(!dateObj(dateInput.value)){validation.textContent="Please enter a valid date (mm/dd/yyyy).";return}if(!timeObj(timeInput.value)){validation.textContent="Please enter a valid time (hh:mm).";return}
- const r={date:dateInput.value,time:timeInput.value};if(editMode==="add"){data.records.push(r);const i=data.records.length-1;persist();closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}else{data.records[editIndex]=r;persist();list()}}
+ const r={date:dateInput.value,time:timeInput.value};
+ if(editMode==="add"){
+   data.records.push(r);const i=data.records.length-1;
+   persist().then(()=>{closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}).catch(e=>{data.records.pop();validation.textContent=e.message||"Unable to save the record."});
+ }else{
+   const old=data.records[editIndex];data.records[editIndex]=r;
+   persist().then(()=>list()).catch(e=>{data.records[editIndex]=old;validation.textContent=e.message||"Unable to save the record."});
+ }
+};
 $("cancelBtn").onclick=list;
 
 function dialog(message,buttons,html=""){closeMenu();$("dialogMessage").textContent=message;$("dialogContent").innerHTML=html;const a=document.createElement("div");a.className="dialog-actions";buttons.forEach(x=>{const b=document.createElement("button");b.textContent=x.label;b.onclick=()=>{hideDialog();x.fn&&x.fn()};a.append(b)});$("dialogContent").append(a);$("dialog").classList.remove("hidden")}
 function hideDialog(){$("dialog").classList.add("hidden");$("dialogContent").innerHTML=""}
 
 function doChange(){const i=selected();if(i<0)return dialog("Please select a record.",[{label:"OK"}]);showEdit("change",i)}
-function doDelete(){const i=selected();if(i<0)return dialog("Please select a record.",[{label:"OK"}]);dialog("Are you sure?",[{label:"Yes",fn:()=>{data.records.splice(i,1);persist();render()}},{label:"Cancel"}])}
+function doDelete(){
+ const i=selected();
+ if(i<0)return dialog("Please select a record.",[{label:"OK"}]);
+ dialog("Are you sure?",[
+   {label:"Yes",fn:()=>{
+     const old=data.records.slice();data.records.splice(i,1);
+     persist().then(()=>render()).catch(e=>{data.records=old;dialog(e.message||"Unable to delete the record.",[{label:"OK"}])});
+   }},
+   {label:"Cancel"}
+ ]);
+}
 const fileInput=$("fileInput");
 function doImport(){dialog("",[{label:"Import",fn:()=>fileInput.click()},{label:"Cancel"}],'<label>Select CSV file</label>')}
-fileInput.onchange=async()=>{const f=fileInput.files[0];fileInput.value="";if(!f)return;try{let lines=(await f.text()).replace(/^\uFEFF/,"").split(/\r?\n/).filter(x=>x.trim());if(lines[0]?.trim().toLowerCase()==="date,time")lines.shift();if(!lines.length)throw Error("Import failed. No data records were found in the CSV file.");const rec=[];for(let n=0;n<lines.length;n++){const line=lines[n],p=line.split(","),date=p[0]?.trim()||"",time=p[1]?.trim()||"";let reason="";if(p.length!==2){reason="The record must contain exactly two comma-separated fields: Date and Time."}else if(!dateObj(date)&&!timeObj(time)){reason="The Date and Time values are both invalid."}else if(!dateObj(date)){reason="The Date value is invalid; expected mm/dd/yyyy."}else if(!timeObj(time)){reason="The Time value is invalid; expected hh:mm in 24-hour format."}if(reason){throw Error(`Import error — Record ${n+1}:\n${line}\nReason: ${reason}`)}rec.push({date,time})}data.records=rec;persist();render()}catch(e){dialog(e.message||"Import failed.",[{label:"OK"}])}}
+fileInput.onchange=async()=>{const f=fileInput.files[0];fileInput.value="";if(!f)return;try{let lines=(await f.text()).replace(/^\uFEFF/,"").split(/\r?\n/).filter(x=>x.trim());if(lines[0]?.trim().toLowerCase()==="date,time")lines.shift();if(!lines.length)throw Error("Import failed. No data records were found in the CSV file.");const rec=[];for(let n=0;n<lines.length;n++){const line=lines[n],p=line.split(","),date=p[0]?.trim()||"",time=p[1]?.trim()||"";let reason="";if(p.length!==2){reason="The record must contain exactly two comma-separated fields: Date and Time."}else if(!dateObj(date)&&!timeObj(time)){reason="The Date and Time values are both invalid."}else if(!dateObj(date)){reason="The Date value is invalid; expected mm/dd/yyyy."}else if(!timeObj(time)){reason="The Time value is invalid; expected hh:mm in 24-hour format."}if(reason){throw Error(`Import error — Record ${n+1}:\n${line}\nReason: ${reason}`)}rec.push({date,time})}const old=data.records.slice();data.records=rec;await persist();render()}catch(e){dialog(e.message||"Import failed.",[{label:"OK"}])}}
 function doExport(){const text="Date,Time\r\n"+data.records.map(r=>r.date+","+r.time).join("\r\n")+"\r\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"}));a.download="Excedrin.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function doQuit(){dialog("The supporting page can be manually closed.",[{label:"OK"}])}
 
 fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
-render();
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
+dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    try { reg.update(); } catch(e) {}
+  }).catch(()=>{});
+}
