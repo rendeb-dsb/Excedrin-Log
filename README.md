@@ -1,4 +1,4 @@
-# Excedrin PWA v22
+# Excedrin PWA v23
 
 Persistence, update, and statistics release.
 
@@ -7,7 +7,7 @@ Persistence, update, and statistics release.
 - Existing records from the earlier Excedrin localStorage storage are migrated automatically if the IndexedDB store is empty.
 - The application does not silently replace unreadable storage with an empty record set.
 - Add, Change, Delete, and Import are persisted before the list is updated.
-- Version 22 uses a new service-worker filename (`sw-v22.js`) and cache name (`excedrin-v22`).
+- Version 22 uses a new service-worker filename (`sw-v23.js`) and cache name (`excedrin-v23`).
 - Stats is displayed to the right of Actions. It replaces the current screen and shows the total number of List rows, a frequency table by date, and a gap list showing missing calendar days between recorded dates.
 - Existing IndexedDB records are not deleted or replaced by the application update.
 
