@@ -14,7 +14,7 @@ h1{margin:0;font-size:30px}
 .hidden{display:none!important}
 main{padding:18px 22px}
 table{width:100%;border-collapse:collapse;border:1px solid #ccc}
-th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;font-size:18px}
+th,td{padding:6px;border-bottom:1px solid #ddd;text-align:left;font-size:18px}
 th{background:#eee}
 td:first-child,th:first-child{text-align:center;width:90px}
 input[type=radio]{width:20px;height:20px}
@@ -32,5 +32,6 @@ input[type=text]{width:100%;padding:10px;border:1px solid #888;border-radius:5px
 #dialogMessage{font-size:19px;margin-bottom:18px}
 .dialog-actions{display:flex;justify-content:flex-end;gap:10px}
 .dialog-actions button{padding:9px 20px;font-size:17px}
-@media(max-width:500px){header{padding-left:18px}main{padding:12px}th,td{font-size:16px}.form-card{padding:16px}}
+@media(max-width:500px){header{padding-left:18px}main{padding:12px}th,td{padding:5px;font-size:16px}.form-card{padding:16px}}
 .date-group-0 td{background:#d9eaff}.date-group-1 td{background:#dff3df}.date-group-2 td{background:#fff0c7}.date-group-3 td{background:#eadcff}.date-group-4 td{background:#ffdede}.date-group-5 td{background:#d9f3f0}
+#fileButton:disabled{opacity:.45;cursor:default} .file-menu button:disabled{color:#999;background:#f7f7f7;cursor:default}
