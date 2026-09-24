@@ -1,4 +1,4 @@
-const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=23;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=24;
 let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
 const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen"),statsScreen=$("statsScreen");
@@ -69,29 +69,59 @@ function showStats(){closeMenu();setActionsEnabled(true);listScreen.classList.ad
 function renderStats(){
   const total=data.records.length;
   $("statsRowCount").textContent=String(total);
-  const freqBody=$("frequencyBody"); freqBody.innerHTML="";
+
+  // Frequency summary: for each occurrence count N, show N(number of rows
+  // whose date occurs exactly N times). For example, 1(15) means 15 rows
+  // have dates that occur once; 2(4) means 4 rows belong to dates occurring twice.
   const byDate=new Map();
   data.records.forEach(r=>byDate.set(r.date,(byDate.get(r.date)||0)+1));
-  const dates=[...byDate.keys()].sort((a,b)=>{const A=dateObj(a),B=dateObj(b);if(!A||!B)return 0;return new Date(B.y,B.mo-1,B.d)-new Date(A.y,A.mo-1,A.d)});
-  dates.forEach(date=>{const tr=document.createElement("tr");const d=document.createElement("td");d.textContent=date;const c=document.createElement("td");c.textContent=String(byDate.get(date));tr.append(d,c);freqBody.append(tr)});
-  if(!dates.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=2;td.textContent="None";tr.append(td);freqBody.append(tr)}
-  const gapBody=$("gapBody"); gapBody.innerHTML="";
-  const uniqueDates=dates.map(dateObj).filter(Boolean).sort((a,b)=>new Date(b.y,b.mo-1,b.d)-new Date(a.y,a.mo-1,a.d));
+  const frequencyTotals=new Map();
+  byDate.forEach(count=>frequencyTotals.set(count,(frequencyTotals.get(count)||0)+count));
+
+  const freqBody=$("frequencyBody");
+  freqBody.innerHTML="";
+  const frequencies=[...frequencyTotals.keys()].sort((a,b)=>a-b);
+  if(!frequencies.length){
+    const tr=document.createElement("tr");
+    const td=document.createElement("td");
+    td.textContent="None"; tr.append(td); freqBody.append(tr);
+  }else{
+    frequencies.forEach(n=>{
+      const tr=document.createElement("tr");
+      const td=document.createElement("td");
+      td.colSpan=2;
+      td.textContent=`${n}(${frequencyTotals.get(n)})`;
+      tr.append(td); freqBody.append(tr);
+    });
+  }
+
+  const gapBody=$("gapBody");
+  gapBody.innerHTML="";
+  const dates=[...byDate.keys()].map(dateObj).filter(Boolean)
+    .sort((a,b)=>new Date(b.y,b.mo-1,b.d)-new Date(a.y,a.mo-1,a.d));
   let gaps=0;
-  for(let i=0;i<uniqueDates.length-1;i++){
-    const newer=uniqueDates[i], older=uniqueDates[i+1];
-    const newerDate=new Date(newer.y,newer.mo-1,newer.d), olderDate=new Date(older.y,older.mo-1,older.d);
+  for(let i=0;i<dates.length-1;i++){
+    const newer=dates[i], older=dates[i+1];
+    const newerDate=new Date(newer.y,newer.mo-1,newer.d);
+    const olderDate=new Date(older.y,older.mo-1,older.d);
     const missing=Math.round((newerDate-olderDate)/86400000)-1;
     if(missing>0){
       gaps++;
       const tr=document.createElement("tr");
-      const a=document.createElement("td");a.textContent=String(newer.mo).padStart(2,"0")+"/"+String(newer.d).padStart(2,"0")+"/"+newer.y;
-      const b=document.createElement("td");b.textContent=String(older.mo).padStart(2,"0")+"/"+String(older.d).padStart(2,"0")+"/"+older.y;
-      const c=document.createElement("td");c.textContent=String(missing);
-      tr.append(a,b,c);gapBody.append(tr);
+      const a=document.createElement("td");
+      a.textContent=String(newer.mo).padStart(2,"0")+"/"+String(newer.d).padStart(2,"0")+"/"+newer.y;
+      const b=document.createElement("td");
+      b.textContent=String(older.mo).padStart(2,"0")+"/"+String(older.d).padStart(2,"0")+"/"+older.y;
+      const c=document.createElement("td");
+      c.textContent=String(missing);
+      tr.append(a,b,c); gapBody.append(tr);
     }
   }
-  if(!gaps){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=3;td.textContent="None";tr.append(td);gapBody.append(tr)}
+  if(!gaps){
+    const tr=document.createElement("tr");
+    const td=document.createElement("td");
+    td.colSpan=3; td.textContent="None"; tr.append(td); gapBody.append(tr);
+  }
 }
 
 function showEdit(mode,i=-1){closeMenu();setActionsEnabled(false);editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
@@ -185,12 +215,12 @@ fileInput.onchange=async()=>{const f=fileInput.files[0];fileInput.value="";if(!f
 function doExport(){const text="Date,Time\r\n"+data.records.map(r=>r.date+","+r.time).join("\r\n")+"\r\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"}));a.download="Excedrin.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function doQuit(){dialog("The supporting page can be manually closed.",[{label:"OK"}])}
 
-fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
+fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="list")list();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
 $("statsButton").onclick=e=>{e.stopPropagation();showStats()};
 const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
 dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw-v23.js").then(reg=>{
+  navigator.serviceWorker.register("sw-v24.js").then(reg=>{
     try { reg.update(); } catch(e) {}
   }).catch(()=>{});
 }
