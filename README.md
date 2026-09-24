@@ -1,4 +1,4 @@
-Excedrin PWA v15
+Excedrin PWA v16
 
 Persistence and update release.
 
@@ -16,4 +16,6 @@ Replace the application files in the existing GitHub Pages repository without de
 Data is stored locally on the device/browser and is not synchronized to another device. Use Export periodically as an independent backup.
 
 
-v15 UI changes: Actions menu, Add label, compact list rows, and Actions disabled while Add or Change is displayed.
+v16 UI changes: Actions menu, Add label, compact list rows, and Actions disabled while Add or Change is displayed.
+
+- v16: further compacted List row height and version display.
