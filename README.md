@@ -1,4 +1,4 @@
-Excedrin PWA v16
+Excedrin PWA v17
 
 Persistence and update release.
 
@@ -14,8 +14,3 @@ IMPORTANT UPDATE RULE:
 Replace the application files in the existing GitHub Pages repository without deleting browser/site data. Do NOT clear cookies, site data, localStorage, or IndexedDB as part of a normal Excedrin update.
 
 Data is stored locally on the device/browser and is not synchronized to another device. Use Export periodically as an independent backup.
-
-
-v16 UI changes: Actions menu, Add label, compact list rows, and Actions disabled while Add or Change is displayed.
-
-- v16: further compacted List row height and version display.

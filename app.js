@@ -1,4 +1,4 @@
-const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=15;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=17;
 let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
 const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
@@ -15,8 +15,9 @@ async function persist(){const db=await dbPromise;await dbReplaceAll(db,data.rec
 function closeMenu(){fileMenu.classList.add("hidden");fileButton.setAttribute("aria-expanded","false")}
 function setActionsEnabled(enabled){
   fileButton.disabled=!enabled;
-  fileMenu.querySelectorAll("button").forEach(b=>b.disabled=!enabled);
-  if(!enabled)closeMenu();
+  fileButton.setAttribute("aria-disabled",String(!enabled));
+  fileMenu.querySelectorAll("button").forEach(b=>{b.disabled=!enabled;b.setAttribute("aria-disabled",String(!enabled));});
+  if(!enabled) closeMenu();
 }
 fileButton.onclick=e=>{e.stopPropagation();const closed=fileMenu.classList.contains("hidden");if(closed){fileMenu.classList.remove("hidden");fileButton.setAttribute("aria-expanded","true")}else closeMenu()};
 document.addEventListener("click",e=>{if(!fileMenu.contains(e.target)&&e.target!==fileButton)closeMenu()});
@@ -62,8 +63,8 @@ function render(selected=-1){
  updateTimeSince();
 }
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
-function list(){setActionsEnabled(true);closeMenu();editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render()}
-function showEdit(mode,i=-1){setActionsEnabled(false);closeMenu();editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
+function list(){closeMenu();setActionsEnabled(true);editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render()}
+function showEdit(mode,i=-1){closeMenu();setActionsEnabled(false);editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
  $("editTitle").textContent=mode==="add"?"Add":"Change";
  if(mode==="add"){const n=new Date();dateInput.value=String(n.getMonth()+1).padStart(2,"0")+"/"+String(n.getDate()).padStart(2,"0")+"/"+n.getFullYear();timeInput.value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")}
  else{dateInput.value=data.records[i].date;timeInput.value=data.records[i].time} setTimeout(()=>dateInput.focus(),50)}
@@ -125,7 +126,7 @@ $("saveBtn").onclick=()=>{maskDate();maskTime();if(!dateObj(dateInput.value)){va
  const r={date:dateInput.value,time:timeInput.value};
  if(editMode==="add"){
    data.records.push(r);const i=data.records.length-1;
-   persist().then(()=>{setActionsEnabled(true);closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}).catch(e=>{data.records.pop();validation.textContent=e.message||"Unable to save the record."});
+   persist().then(()=>{closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}).catch(e=>{data.records.pop();validation.textContent=e.message||"Unable to save the record."});
  }else{
    const old=data.records[editIndex];data.records[editIndex]=r;
    persist().then(()=>list()).catch(e=>{data.records[editIndex]=old;validation.textContent=e.message||"Unable to save the record."});
@@ -156,7 +157,6 @@ function doQuit(){dialog("The supporting page can be manually closed.",[{label:"
 
 fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
 const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
-setActionsEnabled(true);
 dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").then(reg=>{
