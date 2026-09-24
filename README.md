@@ -1,4 +1,4 @@
-Excedrin PWA v18
+# Excedrin PWA v19
 
 Persistence and update release.
 
@@ -7,8 +7,8 @@ Persistence and update release.
 - Existing records from the earlier Excedrin localStorage storage are migrated automatically if the IndexedDB store is empty.
 - The application does not silently replace unreadable storage with an empty record set.
 - Add, Change, Delete, and Import are persisted before the list is updated.
-- The service worker uses a versioned cache and removes obsolete Excedrin caches during activation, so updating the application files does not require deleting site data.
-- The application registers the service worker on each start and asks the browser to check for an updated worker.
+- Version 19 uses a new service-worker filename (`sw-v19.js`) and a network-first fetch strategy to make future application updates more reliable.
+- Existing IndexedDB records are not deleted or replaced by the application update.
 
 IMPORTANT UPDATE RULE:
 Replace the application files in the existing GitHub Pages repository without deleting browser/site data. Do NOT clear cookies, site data, localStorage, or IndexedDB as part of a normal Excedrin update.
