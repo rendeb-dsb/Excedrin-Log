@@ -1,4 +1,4 @@
-const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=19;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=20;
 let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
 const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
@@ -63,7 +63,7 @@ function render(selected=-1){
  updateTimeSince();
 }
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
-function list(){closeMenu();setActionsEnabled(true);editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render()}
+function list(selectedIndex=-1){closeMenu();setActionsEnabled(true);editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render(selectedIndex)}
 function showEdit(mode,i=-1){closeMenu();setActionsEnabled(false);editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
  $("editTitle").textContent=mode==="add"?"Add":"Change";
  if(mode==="add"){const n=new Date();dateInput.value=String(n.getMonth()+1).padStart(2,"0")+"/"+String(n.getDate()).padStart(2,"0")+"/"+n.getFullYear();timeInput.value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")}
@@ -126,7 +126,7 @@ $("saveBtn").onclick=()=>{maskDate();maskTime();if(!dateObj(dateInput.value)){va
  const r={date:dateInput.value,time:timeInput.value};
  if(editMode==="add"){
    data.records.push(r);const i=data.records.length-1;
-   persist().then(()=>{closeMenu();listScreen.classList.remove("hidden");editScreen.classList.add("hidden");render(i)}).catch(e=>{data.records.pop();validation.textContent=e.message||"Unable to save the record."});
+   persist().then(()=>list(i)).catch(e=>{data.records.pop();validation.textContent=e.message||"Unable to save the record."});
  }else{
    const old=data.records[editIndex];data.records[editIndex]=r;
    persist().then(()=>list()).catch(e=>{data.records[editIndex]=old;validation.textContent=e.message||"Unable to save the record."});
@@ -159,7 +159,7 @@ fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation()
 const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
 dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw-v19.js").then(reg=>{
+  navigator.serviceWorker.register("sw-v20.js").then(reg=>{
     try { reg.update(); } catch(e) {}
   }).catch(()=>{});
 }
