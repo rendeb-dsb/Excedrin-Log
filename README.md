@@ -1,4 +1,4 @@
-Excedrin PWA v17
+Excedrin PWA v18
 
 Persistence and update release.
 

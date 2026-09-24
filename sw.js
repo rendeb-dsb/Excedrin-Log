@@ -1,4 +1,4 @@
-const CACHE = "excedrin-v17";
+const CACHE = "excedrin-v18";
 const APP_FILES = [
   "./",
   "./index.html",

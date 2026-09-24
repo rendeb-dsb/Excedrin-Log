@@ -1,4 +1,4 @@
-const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=17;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=18;
 let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
 const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
