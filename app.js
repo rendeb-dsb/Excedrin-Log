@@ -65,62 +65,60 @@ function render(selected=-1){
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
 function list(selectedIndex=-1){closeMenu();setActionsEnabled(true);statsScreen.classList.add("hidden");editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render(selectedIndex)}
 function formatDateKey(key){return key}
-function showStats(){closeMenu();setActionsEnabled(true);listScreen.classList.add("hidden");editScreen.classList.add("hidden");statsScreen.classList.remove("hidden");renderStats()}
-function renderStats(){
-  const total=data.records.length;
-  $("statsRowCount").textContent=String(total);
+function showStats(){
+  closeMenu();
+  listScreen.classList.add("hidden");
+  editScreen.classList.add("hidden");
+  statsScreen.classList.remove("hidden");
+  setActionsEnabled(true);
 
-  // Frequency summary: for each occurrence count N, show N(number of rows
-  // whose date occurs exactly N times). For example, 1(15) means 15 rows
-  // have dates that occur once; 2(4) means 4 rows belong to dates occurring twice.
-  const byDate=new Map();
-  data.records.forEach(r=>byDate.set(r.date,(byDate.get(r.date)||0)+1));
-  const frequencyTotals=new Map();
-  byDate.forEach(count=>frequencyTotals.set(count,(frequencyTotals.get(count)||0)+count));
+  const rowCount=$("statsRowCount");
+  rowCount.textContent=String(data.records.length);
 
-  const freqBody=$("frequencyBody");
-  freqBody.innerHTML="";
-  const frequencies=[...frequencyTotals.keys()].sort((a,b)=>a-b);
-  if(!frequencies.length){
+  // Frequency: group records by date, then show how many dates occur
+  // once, twice, three times, etc.  For example 1(118) means
+  // 118 dates occur exactly once.
+  const dateCounts=new Map();
+  data.records.forEach(r=>dateCounts.set(r.date,(dateCounts.get(r.date)||0)+1));
+  const freqCounts=new Map();
+  dateCounts.forEach(n=>freqCounts.set(n,(freqCounts.get(n)||0)+1));
+  const frequencyBody=$("frequencyBody");
+  frequencyBody.innerHTML="";
+  [...freqCounts.keys()].sort((a,b)=>a-b).forEach(n=>{
     const tr=document.createElement("tr");
     const td=document.createElement("td");
-    td.textContent="None"; tr.append(td); freqBody.append(tr);
-  }else{
-    frequencies.forEach(n=>{
-      const tr=document.createElement("tr");
-      const td=document.createElement("td");
-      td.colSpan=2;
-      td.textContent=`${n}(${frequencyTotals.get(n)})`;
-      tr.append(td); freqBody.append(tr);
-    });
+    td.textContent=`${n}(${freqCounts.get(n)})`;
+    tr.append(td); frequencyBody.append(tr);
+  });
+  if(!freqCounts.size){
+    const tr=document.createElement("tr"),td=document.createElement("td");
+    td.textContent="None"; tr.append(td); frequencyBody.append(tr);
   }
 
-  const gapBody=$("gapBody");
-  gapBody.innerHTML="";
-  const dates=[...byDate.keys()].map(dateObj).filter(Boolean)
-    .sort((a,b)=>new Date(b.y,b.mo-1,b.d)-new Date(a.y,a.mo-1,a.d));
-  let gaps=0;
+  // Gaps: a gap is one consecutive run of missing calendar days between
+  // two recorded dates.  Count how many gap-runs have each length.
+  const dates=[...dateCounts.keys()].map(dateObj).filter(Boolean).sort((a,b)=>{
+    const aa=new Date(a.y,a.mo-1,a.d),bb=new Date(b.y,b.mo-1,b.d); return bb-aa;
+  });
+  const gapCounts=new Map();
   for(let i=0;i<dates.length-1;i++){
-    const newer=dates[i], older=dates[i+1];
+    const newer=dates[i],older=dates[i+1];
     const newerDate=new Date(newer.y,newer.mo-1,newer.d);
     const olderDate=new Date(older.y,older.mo-1,older.d);
     const missing=Math.round((newerDate-olderDate)/86400000)-1;
-    if(missing>0){
-      gaps++;
-      const tr=document.createElement("tr");
-      const a=document.createElement("td");
-      a.textContent=String(newer.mo).padStart(2,"0")+"/"+String(newer.d).padStart(2,"0")+"/"+newer.y;
-      const b=document.createElement("td");
-      b.textContent=String(older.mo).padStart(2,"0")+"/"+String(older.d).padStart(2,"0")+"/"+older.y;
-      const c=document.createElement("td");
-      c.textContent=String(missing);
-      tr.append(a,b,c); gapBody.append(tr);
-    }
+    if(missing>0) gapCounts.set(missing,(gapCounts.get(missing)||0)+1);
   }
-  if(!gaps){
+  const gapBody=$("gapBody");
+  gapBody.innerHTML="";
+  [...gapCounts.keys()].sort((a,b)=>a-b).forEach(n=>{
     const tr=document.createElement("tr");
     const td=document.createElement("td");
-    td.colSpan=3; td.textContent="None"; tr.append(td); gapBody.append(tr);
+    td.textContent=`${n}(${gapCounts.get(n)})`;
+    tr.append(td); gapBody.append(tr);
+  });
+  if(!gapCounts.size){
+    const tr=document.createElement("tr"),td=document.createElement("td");
+    td.textContent="None"; tr.append(td); gapBody.append(tr);
   }
 }
 
@@ -220,7 +218,7 @@ $("statsButton").onclick=e=>{e.stopPropagation();showStats()};
 const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
 dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw-v24.js").then(reg=>{
+  navigator.serviceWorker.register("sw-v25.js").then(reg=>{
     try { reg.update(); } catch(e) {}
   }).catch(()=>{});
 }
