@@ -5,8 +5,10 @@ header{padding:18px 22px 14px;border-bottom:1px solid #ccc}
 h1{margin:0;font-size:30px}
 #versionLabel{font-size:12px;font-weight:400;color:#666;margin-left:10px}
 .time-since{font-size:17px;color:#555;margin-top:6px}
-.filebar{position:relative;background:#eee;border-bottom:1px solid #bbb;height:52px}
-#fileButton{height:100%;padding:0 30px;border:0;background:#eee;font-size:20px;font-weight:700;cursor:pointer}
+.filebar{position:relative;background:#eee;border-bottom:1px solid #bbb;height:52px;display:flex;align-items:stretch}
+.menu-group{position:relative}
+#fileButton,#statsButton{height:100%;padding:0 30px;border:0;background:#eee;font-size:20px;font-weight:700;cursor:pointer}
+#statsButton{border-left:1px solid #ccc}
 .file-menu{position:absolute;z-index:1000;left:0;top:51px;width:220px;background:#fff;border:1px solid #aaa;box-shadow:0 4px 12px #0003}
 .file-menu button{display:block;width:100%;padding:13px 20px;border:0;background:#fff;text-align:left;font-size:18px;cursor:pointer}
 .file-menu button:active,.file-menu button:hover{background:#eee}
@@ -37,3 +39,5 @@ input[type=text]{width:100%;padding:10px;border:1px solid #888;border-radius:5px
 .date-group-0 td{background:#d9eaff}.date-group-1 td{background:#dff3df}.date-group-2 td{background:#fff0c7}.date-group-3 td{background:#eadcff}.date-group-4 td{background:#ffdede}.date-group-5 td{background:#d9f3f0}
 #fileButton:disabled{opacity:.45;cursor:not-allowed}
 .file-menu button:disabled{opacity:.45;cursor:not-allowed;background:#f7f7f7}
+
+#statsScreen{padding:22px}.stats-card{max-width:620px;margin:auto}.stats-card h2{margin:0 0 18px;font-size:24px}.stats-card h3{margin:24px 0 8px;font-size:20px}.stats-table{width:100%;border-collapse:collapse;border:1px solid #ccc}.stats-table th,.stats-table td{padding:7px 10px;border-bottom:1px solid #ddd;text-align:left;font-size:16px}.stats-table th{background:#eee}.stats-summary{max-width:280px}.stats-summary th{width:160px}

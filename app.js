@@ -1,7 +1,7 @@
-const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=21;
+const KEY="excedrinData", DB_NAME="ExcedrinDB", DB_VERSION=1, STORE_NAME="records", VERSION=22;
 let data={version:VERSION,records:[]},editMode=null,editIndex=-1;
 const $=id=>document.getElementById(id);
-const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen");
+const fileButton=$("fileButton"),fileMenu=$("fileMenu"),listScreen=$("listScreen"),editScreen=$("editScreen"),statsScreen=$("statsScreen");
 const dateInput=$("dateInput"),timeInput=$("timeInput"),validation=$("validation");
 
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:"id",autoIncrement:true})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Unable to open the Excedrin database."))})}
@@ -63,7 +63,37 @@ function render(selected=-1){
  updateTimeSince();
 }
 function selected(){const r=document.querySelector('input[name="selected"]:checked');return r?+r.value:-1}
-function list(selectedIndex=-1){closeMenu();setActionsEnabled(true);editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render(selectedIndex)}
+function list(selectedIndex=-1){closeMenu();setActionsEnabled(true);statsScreen.classList.add("hidden");editScreen.classList.add("hidden");listScreen.classList.remove("hidden");render(selectedIndex)}
+function formatDateKey(key){return key}
+function showStats(){closeMenu();setActionsEnabled(true);listScreen.classList.add("hidden");editScreen.classList.add("hidden");statsScreen.classList.remove("hidden");renderStats()}
+function renderStats(){
+  const total=data.records.length;
+  $("statsRowCount").textContent=String(total);
+  const freqBody=$("frequencyBody"); freqBody.innerHTML="";
+  const byDate=new Map();
+  data.records.forEach(r=>byDate.set(r.date,(byDate.get(r.date)||0)+1));
+  const dates=[...byDate.keys()].sort((a,b)=>{const A=dateObj(a),B=dateObj(b);if(!A||!B)return 0;return new Date(B.y,B.mo-1,B.d)-new Date(A.y,A.mo-1,A.d)});
+  dates.forEach(date=>{const tr=document.createElement("tr");const d=document.createElement("td");d.textContent=date;const c=document.createElement("td");c.textContent=String(byDate.get(date));tr.append(d,c);freqBody.append(tr)});
+  if(!dates.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=2;td.textContent="None";tr.append(td);freqBody.append(tr)}
+  const gapBody=$("gapBody"); gapBody.innerHTML="";
+  const uniqueDates=dates.map(dateObj).filter(Boolean).sort((a,b)=>new Date(b.y,b.mo-1,b.d)-new Date(a.y,a.mo-1,a.d));
+  let gaps=0;
+  for(let i=0;i<uniqueDates.length-1;i++){
+    const newer=uniqueDates[i], older=uniqueDates[i+1];
+    const newerDate=new Date(newer.y,newer.mo-1,newer.d), olderDate=new Date(older.y,older.mo-1,older.d);
+    const missing=Math.round((newerDate-olderDate)/86400000)-1;
+    if(missing>0){
+      gaps++;
+      const tr=document.createElement("tr");
+      const a=document.createElement("td");a.textContent=String(newer.mo).padStart(2,"0")+"/"+String(newer.d).padStart(2,"0")+"/"+newer.y;
+      const b=document.createElement("td");b.textContent=String(older.mo).padStart(2,"0")+"/"+String(older.d).padStart(2,"0")+"/"+older.y;
+      const c=document.createElement("td");c.textContent=String(missing);
+      tr.append(a,b,c);gapBody.append(tr);
+    }
+  }
+  if(!gaps){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=3;td.textContent="None";tr.append(td);gapBody.append(tr)}
+}
+
 function showEdit(mode,i=-1){closeMenu();setActionsEnabled(false);editMode=mode;editIndex=i;listScreen.classList.add("hidden");editScreen.classList.remove("hidden");validation.textContent="";
  $("editTitle").textContent=mode==="add"?"Add":"Change";
  if(mode==="add"){const n=new Date();dateInput.value=String(n.getMonth()+1).padStart(2,"0")+"/"+String(n.getDate()).padStart(2,"0")+"/"+n.getFullYear();timeInput.value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")}
@@ -156,10 +186,11 @@ function doExport(){const text="Date,Time\r\n"+data.records.map(r=>r.date+","+r.
 function doQuit(){dialog("The supporting page can be manually closed.",[{label:"OK"}])}
 
 fileMenu.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();closeMenu();const a=b.dataset.action;if(a==="add")showEdit("add");if(a==="change")doChange();if(a==="delete")doDelete();if(a==="import")doImport();if(a==="export")doExport();if(a==="quit")doQuit()});
+$("statsButton").onclick=e=>{e.stopPropagation();showStats()};
 const versionLabel=$("versionLabel"); if(versionLabel) versionLabel.textContent="v"+VERSION;
 dbPromise.then(()=>render()).catch(e=>{document.body.innerHTML="<div style=\"padding:24px;font:18px Arial,sans-serif\"><h2>Excedrin could not start safely</h2><p>"+String(e.message||e)+"</p><p>No records were deleted.</p></div>"});
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw-v21.js").then(reg=>{
+  navigator.serviceWorker.register("sw-v22.js").then(reg=>{
     try { reg.update(); } catch(e) {}
   }).catch(()=>{});
 }

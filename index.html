@@ -9,11 +9,12 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header><div class="title-row"><h1>Excedrin</h1><span id="versionLabel">v21</span></div><div id="timeSince" class="time-since">Time since last use: 00:00:00</div></header>
+<header><div class="title-row"><h1>Excedrin</h1><span id="versionLabel">v22</span></div><div id="timeSince" class="time-since">Time since last use: 00:00:00</div></header>
 
 <nav class="filebar">
-  <button id="fileButton" aria-expanded="false">Actions</button>
-  <div id="fileMenu" class="file-menu hidden" role="menu">
+  <div class="menu-group">
+    <button id="fileButton" aria-expanded="false">Actions</button>
+    <div id="fileMenu" class="file-menu hidden" role="menu">
     <button data-action="add">Add</button>
     <button data-action="change">Change</button>
     <button data-action="delete">Delete</button>
@@ -22,7 +23,9 @@
     <button data-action="export">Export</button>
     <div class="separator"></div>
     <button data-action="quit">Quit</button>
+    </div>
   </div>
+  <button id="statsButton">Stats</button>
 </nav>
 
 <main id="listScreen">
@@ -33,6 +36,29 @@
   </table>
   <div id="emptyMessage" class="empty">No records.</div>
 </main>
+
+<section id="statsScreen" class="hidden">
+  <div class="stats-card">
+    <h2>Stats</h2>
+    <table class="stats-table stats-summary">
+      <tbody>
+        <tr><th>Rows</th><td id="statsRowCount">0</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Frequency</h3>
+    <table class="stats-table">
+      <thead><tr><th>Date</th><th>Count</th></tr></thead>
+      <tbody id="frequencyBody"></tbody>
+    </table>
+
+    <h3>Gaps</h3>
+    <table class="stats-table">
+      <thead><tr><th>From</th><th>To</th><th>Missing Days</th></tr></thead>
+      <tbody id="gapBody"></tbody>
+    </table>
+  </div>
+</section>
 
 <section id="editScreen" class="hidden">
   <div class="form-card">
