@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header><div class="title-row"><h1>Excedrin</h1><span id="versionLabel">v29</span></div><div id="timeSince" class="time-since">Time since last use: 00:00:00</div></header>
+<header><div class="title-row"><h1>Excedrin</h1><span id="versionLabel">v30</span></div><div id="timeSince" class="time-since">Time since last use: 00:00:00</div></header>
 
 <nav class="filebar">
   <div class="menu-group">
@@ -63,10 +63,14 @@
   <div class="form-card">
     <h2 id="editTitle">Add</h2>
     <div class="date-time-row">
-      <label for="dateInput">Date</label>
-      <input id="dateInput" class="date-entry" type="text" inputmode="numeric" maxlength="10" placeholder="__/__/____" autocomplete="off">
-      <label for="timeInput">Time</label>
-      <input id="timeInput" class="time-entry" type="text" inputmode="numeric" maxlength="5" placeholder="__:__" autocomplete="off">
+      <div class="field-group">
+        <label for="dateInput">Date</label>
+        <input id="dateInput" class="date-entry" type="text" inputmode="numeric" maxlength="10" placeholder="__/__/____" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label for="timeInput">Time</label>
+        <input id="timeInput" class="time-entry" type="text" inputmode="numeric" maxlength="5" placeholder="__:__" autocomplete="off">
+      </div>
     </div>
     <div class="buttons">
       <button id="saveBtn">Save</button>
