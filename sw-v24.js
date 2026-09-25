@@ -1,4 +1,4 @@
-const CACHE = "excedrin-v24";
+const CACHE = "excedrin-v27";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -9,21 +9,13 @@ const APP_FILES = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(APP_FILES))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(key => key.startsWith("excedrin-") && key !== CACHE)
-          .map(key => caches.delete(key))
-      ))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith("excedrin-") && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -33,10 +25,8 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        if (response && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, copy));
-        }
+        const copy = response.clone();
+        caches.open(CACHE).then(cache => cache.put(event.request, copy)).catch(() => {});
         return response;
       })
       .catch(() => caches.match(event.request))

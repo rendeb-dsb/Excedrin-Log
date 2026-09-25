@@ -1,17 +1,7 @@
-# Excedrin PWA v25
+# Excedrin PWA v27
 
-Persistence, update, and statistics release.
+Version 27 of the Excedrin PWA. This version retains the v25/v26 Stats behavior, including frequency and gap-series summaries, and uses v27 as the application version.
 
-- Excedrin records are stored in IndexedDB in a database named ExcedrinDB.
-- The IndexedDB database is independent of the application version number.
-- Existing records from the earlier Excedrin localStorage storage are migrated automatically if the IndexedDB store is empty.
-- The application does not silently replace unreadable storage with an empty record set.
-- Add, Change, Delete, and Import are persisted before the list is updated.
-- Version 26 uses a new service-worker filename (`sw-v26.js`) and cache name (`excedrin-v26`).
-- Stats is displayed to the right of Actions. It replaces the current screen and shows the total number of List rows, a frequency table by date, and a gap list showing missing calendar days between recorded dates.
-- Existing IndexedDB records are not deleted or replaced by the application update.
+Important update detail: `sw-v24.js` is intentionally replaced with the v27 service-worker code. The installed v24 service worker was still controlling the site, so changing the old script in place allows the browser to update the currently controlling worker without clearing IndexedDB or site data. The app registers `sw-v24.js` for this transition.
 
-IMPORTANT UPDATE RULE:
-Replace the application files in the existing GitHub Pages repository without deleting browser/site data. Do NOT clear cookies, site data, localStorage, or IndexedDB as part of a normal Excedrin update.
-
-Data is stored locally on the device/browser and is not synchronized to another device. Use Export periodically as an independent backup.
+Existing IndexedDB data is preserved.
