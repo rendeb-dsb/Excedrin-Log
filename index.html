@@ -62,10 +62,12 @@
 <section id="editScreen" class="hidden">
   <div class="form-card">
     <h2 id="editTitle">Add</h2>
-    <label for="dateInput">Date</label>
-    <input id="dateInput" type="text" inputmode="numeric" maxlength="10" placeholder="__/__/____" autocomplete="off">
-    <label for="timeInput">Time</label>
-    <input id="timeInput" type="text" inputmode="numeric" maxlength="5" placeholder="__:__" autocomplete="off">
+    <div class="date-time-row">
+      <label for="dateInput">Date</label>
+      <input id="dateInput" class="date-entry" type="text" inputmode="numeric" maxlength="10" placeholder="__/__/____" autocomplete="off">
+      <label for="timeInput">Time</label>
+      <input id="timeInput" class="time-entry" type="text" inputmode="numeric" maxlength="5" placeholder="__:__" autocomplete="off">
+    </div>
     <div class="buttons">
       <button id="saveBtn">Save</button>
       <button id="cancelBtn">Cancel</button>
